@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+<!--    开启注解扫描-->
+    <context:component-scan base-package="cn.kgc"/>
+
+<!--    开启任务调度的注解扫描-->
+    <task:annotation-driven/>
+<!--    -->
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="objectMapper">
+                    <bean class="cn.kgc.itrip.utils.JsonMapper"/>
+                </property>
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>application/json;charset=utf-8</value>
+                    </list>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+
+    <!-- 配置文件上传  MultipartResolver-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="utf-8"></property>
+        <property name="maxUploadSize" value="5242880"></property>
+        <property name="maxInMemorySize" value="40960"></property>
+        <property name="resolveLazily" value="true"></property><!--注意方法入参，不要从请求取数据-->
+    </bean>
+
+    <context:property-placeholder location="classpath:systemConfig.properties" />
+
+    <!-- 机器码 -->
+    <bean id="systemConfig" class="cn.kgc.itrip.utils.SystemConfig">
+        <property name="fileUploadPathString" value="${sysConfig.fileUploadPath}"/>
+        <property name="visitImgUrlString" value="${sysConfig.visitImgUrl}"/>
+        <property name="machineCode" value="${sysConfig.machineCode}"/>
+        <property name="orderProcessOK" value="${sysConfig.orderProcessOK}"/>
+        <property name="orderProcessCancel" value="${sysConfig.orderProcessCancel}"/>
+
+    </bean>
+
+</beans>
