@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+
+    <aop:aspectj-autoproxy/>
+    <import resource="applicationContext-alipay.xml"/>
+    <import resource="applicationContext-wxpay.xml"/>
+<!--    扫描注解-->
+    <context:component-scan base-package="cn.kgc"/>
+
+<!--    引入配置文件-->
+    <context:property-placeholder location="classpath*:database.properties"/>
+
+<!--    配置数据源-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="${mysql.user}"/>
+        <property name="password" value="${mysql.password}"/>
+        <property name="jdbcUrl" value="${mysql.url}"/>
+        <property name="driverClass" value="${mysql.driver}"/>
+    </bean>
+
+<!--    配置redis连接池-->
+    <bean id="config" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxIdle" value="100"/>
+        <property name="maxActive" value="1000"/>
+        <property name="testOnReturn" value="true"/>
+    </bean>
+
+<!--    配置连接池-->
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+        <constructor-arg name="poolConfig" ref="config"/>
+        <constructor-arg name="host" value="127.0.0.1"/>
+        <constructor-arg name="port" value="6379"/>
+    </bean>
+
+<!--    配置会话工厂-->
+    <bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+<!--        配置数据源 -->
+        <property name="dataSource" ref="dataSource"/>
+        <property name="mapperLocations" value="classpath:mapper/*/*Mapper.xml"/>
+    </bean>
+
+<!--    扫描接口-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="cn.kgc.itrip.mapper"/>
+    </bean>
+
+<!--    配置事务-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+<!--    配置声明式事务-->
+   <tx:advice id="myAdvice">
+       <tx:attributes >
+           <tx:method name="*" timeout="120"
+              rollback-for="java.lang.RuntimeException"
+              propagation="REQUIRED"/>
+       </tx:attributes>
+   </tx:advice>
+
+    <aop:config proxy-target-class="true">
+        <aop:pointcut expression="execution(* cn.kgc.itrip.trade.service.*.*(..))"
+                      id="transService"/>
+        <aop:advisor advice-ref="myAdvice" pointcut-ref="transService"/>
+    </aop:config>
+</beans>
