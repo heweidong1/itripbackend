@@ -20,7 +20,7 @@
     <properties>
         <spring.version>4.0.6.RELEASE</spring.version>
         <shiro.version>1.3.2</shiro.version>
-        <jackson.verson>2.8.7</jackson.verson>
+        <jackson.verson>2.12.6.1</jackson.verson>
     </properties>
     <dependencies>
         <dependency>
